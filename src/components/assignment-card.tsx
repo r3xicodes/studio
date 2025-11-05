@@ -27,7 +27,7 @@ export function AssignmentCard({ assignment, onToggleComplete, onDelete }: Assig
   const cardId = `assignment-${assignment.id}`;
 
   const dueDateText = () => {
-    if (isOverdue) return `Overdue by ${format(assignment.dueDate, 'PPP')}`;
+    if (isOverdue) return `Overdue`;
     if (isToday(assignment.dueDate)) return 'Due Today';
     return `Due ${format(assignment.dueDate, 'PPP')}`;
   };
