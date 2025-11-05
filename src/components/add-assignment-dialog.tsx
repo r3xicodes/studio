@@ -77,7 +77,8 @@ export function AddAssignmentDialog({
         ...values,
         notes: values.notes || '',
     });
-    form.reset();
+    form.reset({ title: '', notes: '', classId: undefined, dueDate: undefined, estimatedWorkload: undefined, suggestedStartDate: undefined });
+    onOpenChange(false);
   }
 
   const handleAiSuggestion = async () => {
@@ -116,9 +117,16 @@ export function AddAssignmentDialog({
       });
     }
   };
+  
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      form.reset({ title: '', notes: '', classId: undefined, dueDate: undefined, estimatedWorkload: undefined, suggestedStartDate: undefined });
+    }
+    onOpenChange(open);
+  }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Add New Assignment</DialogTitle>
@@ -148,7 +156,7 @@ export function AddAssignmentDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Class</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a class" />
@@ -210,7 +218,7 @@ export function AddAssignmentDialog({
                 <FormItem>
                   <FormLabel>Estimated Workload (hours)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g., 5" {...field} />
+                    <Input type="number" placeholder="e.g., 5" {...field} onChange={event => field.onChange(+event.target.value)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -282,7 +290,7 @@ export function AddAssignmentDialog({
             />
 
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button type="button" variant="ghost" onClick={() => handleOpenChange(false)}>Cancel</Button>
               <Button type="submit">Add Assignment</Button>
             </DialogFooter>
           </form>

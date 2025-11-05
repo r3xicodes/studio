@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { isPast, isToday, isThisWeek } from 'date-fns';
+import { isPast, isToday, isThisWeek, startOfToday } from 'date-fns';
 import {
   Accordion,
   AccordionContent,
@@ -39,11 +39,12 @@ export function AssignmentList({ assignments, onToggleComplete, onDelete }: Assi
   }, [upcomingAssignments]);
 
   const statusGroups = useMemo(() => {
+    const today = startOfToday();
     const groups = {
       overdue: upcomingAssignments.filter(a => isPast(a.dueDate) && !isToday(a.dueDate)),
       today: upcomingAssignments.filter(a => isToday(a.dueDate)),
-      thisWeek: upcomingAssignments.filter(a => isThisWeek(a.dueDate, { weekStartsOn: 1 }) && !isToday(a.dueDate) && !isPast(a.dueDate)),
-      later: upcomingAssignments.filter(a => !isThisWeek(a.dueDate, { weekStartsOn: 1 }) && !isToday(a.dueDate) && !isPast(a.dueDate)),
+      thisWeek: upcomingAssignments.filter(a => isThisWeek(a.dueDate, { weekStartsOn: 1 }) && !isToday(a.dueDate) && a.dueDate > today),
+      later: upcomingAssignments.filter(a => !isThisWeek(a.dueDate, { weekStartsOn: 1 }) && !isToday(a.dueDate) && a.dueDate > today),
     };
     return groups;
   }, [upcomingAssignments]);
@@ -67,32 +68,34 @@ export function AssignmentList({ assignments, onToggleComplete, onDelete }: Assi
         <TabsTrigger value="status">By Status</TabsTrigger>
         <TabsTrigger value="class">By Class</TabsTrigger>
       </TabsList>
-      <TabsContent value="status" className="mt-6 space-y-6">
-        {Object.entries(statusGroups).map(([key, value]) =>
-          value.length > 0 ? (
-            <div key={key}>
-              <h2 className="text-xl font-bold mb-3 capitalize font-headline">
-                {key.replace(/([A-Z])/g, ' $1')}
-              </h2>
-              {renderAssignmentList(value)}
-            </div>
-          ) : null
-        )}
-        
-        {upcomingAssignments.length === 0 && (
-             <div className="flex h-40 flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card/50">
-                <p className="text-xl font-semibold text-foreground">All caught up!</p>
-                <p className="text-muted-foreground">You have no upcoming assignments.</p>
-            </div>
-        )}
+      <TabsContent value="status" className="mt-6">
+        <div className="space-y-6">
+          {Object.entries(statusGroups).map(([key, value]) =>
+            value.length > 0 ? (
+              <div key={key}>
+                <h2 className="text-xl font-bold mb-3 capitalize font-headline">
+                  {key === 'thisWeek' ? 'This Week' : key}
+                </h2>
+                {renderAssignmentList(value)}
+              </div>
+            ) : null
+          )}
+          
+          {upcomingAssignments.length === 0 && (
+               <div className="flex h-40 flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card/50">
+                  <p className="text-xl font-semibold text-foreground">All caught up!</p>
+                  <p className="text-muted-foreground">You have no upcoming assignments.</p>
+              </div>
+          )}
 
-        {completedAssignments.length > 0 && (
-          <div>
-            <h2 className="text-xl font-bold mb-3 font-headline">Completed</h2>
-            {renderAssignmentList(completedAssignments.slice(0, 5).sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime()))}
-             {completedAssignments.length > 5 && <p className="text-center text-sm text-muted-foreground mt-2">...and {completedAssignments.length - 5} more.</p>}
-          </div>
-        )}
+          {completedAssignments.length > 0 && (
+            <div>
+              <h2 className="text-xl font-bold mb-3 font-headline">Completed</h2>
+              {renderAssignmentList(completedAssignments.slice(0, 5).sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime()))}
+               {completedAssignments.length > 5 && <p className="text-center text-sm text-muted-foreground mt-2">...and {completedAssignments.length - 5} more.</p>}
+            </div>
+          )}
+        </div>
       </TabsContent>
       <TabsContent value="class" className="mt-4">
         {groupedByClass.length > 0 ? (
@@ -112,10 +115,10 @@ export function AssignmentList({ assignments, onToggleComplete, onDelete }: Assi
             ))}
           </Accordion>
         ) : (
-            <div className="flex h-40 flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card/50">
-                <p className="text-xl font-semibold text-foreground">All caught up!</p>
-                <p className="text-muted-foreground">You have no upcoming assignments.</p>
-            </div>
+          <div className="flex h-40 flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card/50">
+              <p className="text-xl font-semibold text-foreground">All caught up!</p>
+              <p className="text-muted-foreground">You have no upcoming assignments.</p>
+          </div>
         )}
       </TabsContent>
     </Tabs>

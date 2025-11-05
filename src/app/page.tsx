@@ -24,7 +24,7 @@ export default function Home() {
 
   const { data: assignments, isLoading } = useCollection<Omit<Assignment, 'id' | 'dueDate' | 'suggestedStartDate' | 'createdAt'> & { dueDate: string, suggestedStartDate?: string, createdAt: { seconds: number, nanoseconds: number } }>(assignmentsCollection);
 
-  const mappedAssignments = useMemo(() => {
+  const mappedAssignments: Assignment[] = useMemo(() => {
     return assignments?.map(a => ({
       ...a,
       id: a.id,
@@ -34,9 +34,9 @@ export default function Home() {
     })) || [];
   }, [assignments]);
 
-  const handleAddAssignment = (newAssignmentData: Omit<Assignment, 'id' | 'completed'>) => {
+  const handleAddAssignment = (newAssignmentData: Omit<Assignment, 'id' | 'completed' | 'createdAt'>) => {
     if (!assignmentsCollection) return;
-    const newAssignment: Omit<Assignment, 'id'> = {
+    const newAssignment: Omit<Assignment, 'id' | 'createdAt'> & {createdAt: Date} = {
       ...newAssignmentData,
       completed: false,
       createdAt: new Date(),
