@@ -15,7 +15,7 @@ import { AssignmentCard } from './assignment-card';
 type AssignmentListProps = {
   assignments: Assignment[];
   classes: Class[];
-  onToggleComplete: (id: string) => void;
+  onToggleComplete: (id: string, completed: boolean) => void;
   onDelete: (id: string) => void;
 };
 

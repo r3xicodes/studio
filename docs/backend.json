@@ -6,10 +6,6 @@
       "type": "object",
       "description": "Represents a homework assignment or academic task.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Assignment entity."
-        },
         "title": {
           "type": "string",
           "description": "The title or name of the assignment."
@@ -21,111 +17,52 @@
         },
         "classId": {
           "type": "string",
-          "description": "Reference to the Class entity. (Relationship: Class 1:N Assignment)"
+          "description": "Reference to the Class entity."
         },
-        "description": {
+        "notes": {
           "type": "string",
           "description": "A description of the assignment."
         },
-        "isCompleted": {
+        "completed": {
           "type": "boolean",
           "description": "Indicates whether the assignment has been completed."
         },
-        "reminderDateTime": {
+        "suggestedStartDate": {
           "type": "string",
-          "description": "The date and time to send a reminder for the assignment.",
+          "description": "The suggested date to start the assignment.",
           "format": "date-time"
+        },
+        "estimatedWorkload": {
+            "type": "number",
+            "description": "Estimated hours to complete the assignment."
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date and time the assignment was created."
         }
       },
       "required": [
-        "id",
         "title",
         "dueDate",
         "classId",
-        "description",
-        "isCompleted",
-        "reminderDateTime"
-      ]
-    },
-    "Class": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Class",
-      "type": "object",
-      "description": "Represents a class or course.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Class entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the class (e.g., Math, History)."
-        },
-        "description": {
-          "type": "string",
-          "description": "A description of the class."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "description"
+        "notes",
+        "completed",
+        "createdAt"
       ]
     }
   },
   "auth": {
     "providers": [
-      "password",
       "anonymous"
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}/classes/{classId}",
-        "definition": {
-          "entityName": "Class",
-          "schema": {
-            "$ref": "#/backend/entities/Class"
-          },
-          "description": "Stores class entities owned by a user. Path-based ownership is used for authorization.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The ID of the user who owns the class."
-            },
-            {
-              "name": "classId",
-              "description": "The ID of the class."
-            }
-          ]
-        }
+    "/users/{userId}/assignments/{assignmentId}": {
+      "schema": {
+        "$ref": "#/entities/Assignment"
       },
-      {
-        "path": "/users/{userId}/classes/{classId}/assignments/{assignmentId}",
-        "definition": {
-          "entityName": "Assignment",
-          "schema": {
-            "$ref": "#/backend/entities/Assignment"
-          },
-          "description": "Stores assignment entities within a specific class, owned by a user. Path-based ownership for authorization.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The ID of the user who owns the assignment."
-            },
-            {
-              "name": "classId",
-              "description": "The ID of the class the assignment belongs to."
-            },
-            {
-              "name": "assignmentId",
-              "description": "The ID of the assignment."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore data structure is designed to manage assignments and classes for a school planner application, \"PlanItRight\". The structure emphasizes authorization independence, clarity, and scalability.  User data (classes, assignments) is stored under the `/users/{userId}` collection to provide path-based ownership. This approach simplifies security rules and allows for efficient data retrieval.\n\n**Authorization Independence:** To ensure authorization independence, no `get()` calls are needed. Path-based ownership (`/users/{userId}/classes/{classId}`) implicitly grants ownership. This structure enables atomic operations (transactions/batches) for creating classes and their associated assignments, as well as assignment updates, without needing to check parent document permissions.  This directly addresses Authorization Independence.\n\n**Structural Segregation:**  Classes and Assignments are stored in separate subcollections under the user document. This segregation ensures that different data types with potentially different security requirements do not reside in the same collection.\n\n**Access Modeling:** Path-based ownership (`/users/{userId}/classes/{classId}`) is used for classes, which are private to the user. Assignments, owned by the user, are stored in `/users/{userId}/classes/{classId}/assignments/{assignmentId}`.\n\n**QAPs (Rules are not Filters):** The design supports secure `list` operations. Listing classes is restricted to the owning user via `/users/{userId}/classes`. Listing assignments is restricted to the owning user and the specific class via `/users/{userId}/classes/{classId}/assignments`.  This is achieved through path-based rules (e.g., `match /users/{userId}/classes/{classId} { allow read, write: if request.auth.uid == userId; }`). No filtering is required in the rules themselves, ensuring QAPs.\n\n**Invariants:** The structure supports integrity of ownership. Timestamps, while not explicitly included in the schema, can be added and enforced via rules or server-side functions to ensure data integrity."
+      "description": "Stores assignment entities owned by a user."
+    }
   }
 }

@@ -51,7 +51,7 @@ const formSchema = z.object({
 type AddAssignmentDialogProps = {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddAssignment: (assignment: Omit<Assignment, 'id' | 'completed'>) => void;
+  onAddAssignment: (assignment: Omit<Assignment, 'id' | 'completed' | 'createdAt'>) => void;
   classes: Class[];
 };
 

@@ -15,4 +15,5 @@ export type Assignment = {
   completed: boolean;
   suggestedStartDate?: Date;
   estimatedWorkload?: number;
+  createdAt: Date;
 };

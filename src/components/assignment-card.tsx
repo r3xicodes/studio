@@ -17,7 +17,7 @@ import {
 
 type AssignmentCardProps = {
   assignment: Assignment;
-  onToggleComplete: (id: string) => void;
+  onToggleComplete: (id: string, completed: boolean) => void;
   onDelete: (id: string) => void;
 };
 
@@ -38,7 +38,7 @@ export function AssignmentCard({ assignment, onToggleComplete, onDelete }: Assig
         <Checkbox
           id={cardId}
           checked={assignment.completed}
-          onCheckedChange={() => onToggleComplete(assignment.id)}
+          onCheckedChange={() => onToggleComplete(assignment.id, assignment.completed)}
           aria-label={`Mark "${assignment.title}" as complete`}
           className="mt-1.5 h-5 w-5"
         />
