@@ -22,19 +22,21 @@ export default function Home() {
     return collection(firestore, `users/${user.uid}/assignments`);
   }, [user, firestore]);
 
-  const { data: assignments, isLoading } = useCollection<Omit<Assignment, 'dueDate' | 'suggestedStartDate'> & { dueDate: string, suggestedStartDate?: string }>(assignmentsCollection);
+  const { data: assignments, isLoading } = useCollection<Omit<Assignment, 'id' | 'dueDate' | 'suggestedStartDate' | 'createdAt'> & { dueDate: string, suggestedStartDate?: string, createdAt: { seconds: number, nanoseconds: number } }>(assignmentsCollection);
 
   const mappedAssignments = useMemo(() => {
     return assignments?.map(a => ({
       ...a,
+      id: a.id,
       dueDate: new Date(a.dueDate),
       suggestedStartDate: a.suggestedStartDate ? new Date(a.suggestedStartDate) : undefined,
+      createdAt: new Date(a.createdAt.seconds * 1000),
     })) || [];
   }, [assignments]);
 
   const handleAddAssignment = (newAssignmentData: Omit<Assignment, 'id' | 'completed'>) => {
     if (!assignmentsCollection) return;
-    const newAssignment: Omit<Assignment, 'id'> & { createdAt: Date } = {
+    const newAssignment: Omit<Assignment, 'id'> = {
       ...newAssignmentData,
       completed: false,
       createdAt: new Date(),
@@ -59,7 +61,7 @@ export default function Home() {
     return [...mappedAssignments].sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
   }, [mappedAssignments]);
 
-  if (isUserLoading || isLoading) {
+  if (isUserLoading || (isLoading && !assignments)) {
     return (
       <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background">
         <div className="text-2xl font-bold">Loading...</div>
@@ -78,7 +80,6 @@ export default function Home() {
       <main className="flex-1 p-4 sm:p-6 md:p-8">
         <AssignmentList
           assignments={sortedAssignments}
-          classes={CLASSES}
           onToggleComplete={handleToggleComplete}
           onDelete={handleDeleteAssignment}
         />

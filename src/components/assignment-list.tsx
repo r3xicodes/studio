@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { isPast, isToday, isThisWeek, isThisYear } from 'date-fns';
+import { isPast, isToday, isThisWeek } from 'date-fns';
 import {
   Accordion,
   AccordionContent,
@@ -9,31 +9,36 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Assignment, Class } from '@/lib/types';
+import type { Assignment } from '@/lib/types';
 import { AssignmentCard } from './assignment-card';
+import { findClassById } from '@/lib/utils';
 
 type AssignmentListProps = {
   assignments: Assignment[];
-  classes: Class[];
   onToggleComplete: (id: string, completed: boolean) => void;
   onDelete: (id: string) => void;
 };
 
-export function AssignmentList({ assignments, classes, onToggleComplete, onDelete }: AssignmentListProps) {
+export function AssignmentList({ assignments, onToggleComplete, onDelete }: AssignmentListProps) {
   const upcomingAssignments = useMemo(() => assignments.filter(a => !a.completed), [assignments]);
   const completedAssignments = useMemo(() => assignments.filter(a => a.completed), [assignments]);
 
   const groupedByClass = useMemo(() => {
-    return classes
-      .map(c => ({
-        ...c,
-        assignments: upcomingAssignments.filter(a => a.classId === c.id),
-      }))
-      .filter(c => c.assignments.length > 0);
-  }, [classes, upcomingAssignments]);
+    const classes = upcomingAssignments.reduce((acc, assignment) => {
+        const classInfo = findClassById(assignment.classId);
+        if (classInfo) {
+            if (!acc[classInfo.id]) {
+            acc[classInfo.id] = { ...classInfo, assignments: [] };
+            }
+            acc[classInfo.id].assignments.push(assignment);
+        }
+        return acc;
+    }, {} as Record<string, { id: string; name: string; icon: any; assignments: Assignment[] }>);
+    
+    return Object.values(classes);
+  }, [upcomingAssignments]);
 
   const statusGroups = useMemo(() => {
-    const today = new Date();
     const groups = {
       overdue: upcomingAssignments.filter(a => isPast(a.dueDate) && !isToday(a.dueDate)),
       today: upcomingAssignments.filter(a => isToday(a.dueDate)),
@@ -55,12 +60,6 @@ export function AssignmentList({ assignments, classes, onToggleComplete, onDelet
       ))}
     </div>
   );
-
-  const renderEmptyState = (groupName: string) => (
-    <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed bg-card/50">
-        <p className="text-muted-foreground">No {groupName} assignments. Great job!</p>
-    </div>
-  )
 
   return (
     <Tabs defaultValue="status" className="w-full">
@@ -90,7 +89,7 @@ export function AssignmentList({ assignments, classes, onToggleComplete, onDelet
         {completedAssignments.length > 0 && (
           <div>
             <h2 className="text-xl font-bold mb-3 font-headline">Completed</h2>
-            {renderAssignmentList(completedAssignments.slice(0, 5))}
+            {renderAssignmentList(completedAssignments.slice(0, 5).sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime()))}
              {completedAssignments.length > 5 && <p className="text-center text-sm text-muted-foreground mt-2">...and {completedAssignments.length - 5} more.</p>}
           </div>
         )}
